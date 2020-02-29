@@ -36,25 +36,35 @@ def parse_task_list_arg(task_list: str) -> List[str]:
     return task_names
 
 
-def parse_cuda_list_arg(cuda_arg):
+def parse_cuda_related_args(args):
     """
-    Parse cuda_list settings
+    Parse list of decives in args.cuda
+    Resolve auto options of args.cuda and args.use_amp
     """
     result_cuda = []
-    if cuda_arg == "auto":
+    if args.cuda == "auto":
         result_cuda = list(range(torch.cuda.device_count()))
         if len(result_cuda) == 1:
             result_cuda = result_cuda[0]
         elif len(result_cuda) == 0:
             result_cuda = -1
-    elif isinstance(cuda_arg, int):
-        result_cuda = cuda_arg
-    elif "," in cuda_arg:
-        result_cuda = [int(d) for d in cuda_arg.split(",")]
+    elif isinstance(args.cuda, int):
+        result_cuda = args.cuda
+    elif "," in args.cuda:
+        result_cuda = [int(d) for d in args.cuda.split(",")]
     else:
         raise ValueError(
             "Your cuda settings do not match any of the possibilities in defaults.conf"
         )
-    if torch.cuda.device_count() == 0 and not (isinstance(result_cuda, int) and result_cuda == -1):
+    if torch.cuda.device_count() == 0 and result_cuda != -1:
         raise ValueError("You specified usage of CUDA but CUDA devices not found.")
+
+    if args.use_amp == "auto":
+        if result_cuda != -1:
+            args.use_amp = 1
+        else:
+            args.use_amp = 0
+    elif args.use_amp == 1 and result_cuda == -1:
+        raise ValueError("use_amp requires CUDA")
+
     return result_cuda

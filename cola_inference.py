@@ -51,7 +51,7 @@ from jiant.tasks.tasks import tokenize_and_truncate, sentence_to_text_field
 from jiant.utils import config
 from jiant.utils.data_loaders import load_tsv
 from jiant.utils.utils import load_model_state, select_pool_type
-from jiant.utils.options import parse_cuda_list_arg
+from jiant.utils.options import parse_cuda_related_args
 from jiant.utils.tokenizers import select_tokenizer
 from jiant.__main__ import check_arg_name
 
@@ -148,11 +148,11 @@ def main(cl_arguments):
         args.pool_type = select_pool_type(args)
 
     # Prepare data #
-    _, target_tasks, vocab, word_embs = build_tasks(args)
+    cuda_device = parse_cuda_related_args(args.cuda)
+    _, target_tasks, vocab, word_embs = build_tasks(args, cuda_device)
     tasks = sorted(set(target_tasks), key=lambda x: x.name)
 
     # Build or load model #
-    cuda_device = parse_cuda_list_arg(args.cuda)
     model = build_model(args, vocab, word_embs, tasks, cuda_device)
     log.info("Loading existing model from %s...", cl_args.model_file_path)
     load_model_state(model, cl_args.model_file_path, args.cuda, [], strict=False)

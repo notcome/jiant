@@ -30,7 +30,7 @@ from jiant.preprocess import build_tasks
 from jiant import tasks as task_modules
 from jiant.trainer import build_trainer
 from jiant.utils import config, tokenizers
-from jiant.utils.options import parse_cuda_list_arg
+from jiant.utils.options import parse_cuda_related_args
 from jiant.utils.utils import (
     assert_for_log,
     load_model_state,
@@ -543,10 +543,10 @@ def main(cl_arguments):
     # Check for deprecated arg names
     check_arg_name(args)
     args, seed = initial_setup(args, cl_args)
+    cuda_device = parse_cuda_related_args(args)
     # Load tasks
     log.info("Loading tasks...")
     start_time = time.time()
-    cuda_device = parse_cuda_list_arg(args.cuda)
     pretrain_tasks, target_tasks, vocab, word_embs = build_tasks(args, cuda_device)
     tasks = sorted(set(pretrain_tasks + target_tasks), key=lambda x: x.name)
     log.info("\tFinished loading tasks in %.3fs", time.time() - start_time)
