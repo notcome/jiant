@@ -59,12 +59,20 @@ def parse_cuda_related_args(args):
     if torch.cuda.device_count() == 0 and result_cuda != -1:
         raise ValueError("You specified usage of CUDA but CUDA devices not found.")
 
+    try:
+        import apex
+
+        apex_available = True
+    except ImportError:
+        apex_available = False
+
     if args.use_amp == "auto":
-        if result_cuda != -1:
+        if result_cuda != -1 and apex_available:
             args.use_amp = 1
         else:
             args.use_amp = 0
-    elif args.use_amp == 1 and result_cuda == -1:
-        raise ValueError("use_amp requires CUDA")
+    elif args.use_amp == 1:
+        assert apex_available, "Apex not installed."
+        assert result_cuda == -1, "You need at least one CUDA device for use_amp."
 
     return result_cuda
